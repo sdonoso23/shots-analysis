@@ -16,18 +16,102 @@ source("r/functions.r")
 # Generate data
 source("r/generatedata.r")
 
+```
+###1.**Objective**
+
+I would like to do a descriptive analisis of the dataset before starting the creation of a simple expected shots model.
+
+###2.**The Dataset**
+
+The data consists of 403554 shots in matches from eight seasons of the 5 big leagues and UEFA Champions League from 2009-2010 to 2016-2017. UEFA Champions League penalty shootouts and all the own goals have been excluded.
+
+Includes as variables:
+
++ Match, player, team, league, season information.
++ Time by minutes and seconds
++ Shot outcome
++ Shot location coordinates and areas
++ Assist indicator
++ Game situation previous to the shot
++ Block shot indicator and position
++ Goal mouth coordinates and areas
++ Part of body used to execute the shot
++ Big chance indicator
+
+Let's start by doing a simple check of the number of shots by season and league:
+
+```{r echo=FALSE}
+general_summ %>%
+    group_by(league,season) %>%
+    summarize(shots = sum(shots)) %>%
+    datatable(rownames = FALSE,caption = "Number of shots (includes penalties)", class = "cell-border stripe",options = list(
+        pageLength = 8, columnDefs = list(list(className = 'dt-center', targets = "_all"))))
 
 ```
 
+&nbsp;
 
-###1.**The Data**
+There's a clear decline in the number shots from 2009-2010 to 2016-2017. The Premier League registers more than 1000 shots less in 2016-2017 when compared to 2009-2010.
 
-The data consists in all the matches from eight seasons of the 5 big leagues and UEFA Champions League from 2009-2010 to 2016-2017:  
+Next would be nice to see how this translates into average goals per game:
+
+```{r echo=FALSE, fig.align='center',fig.height=6,fig.width=8}
+
+ggplot(data=general_summ,aes(y = goalavgmatch,x = season,group = league, label = round(goalavgmatch,2)))+
+    geom_line()+
+        geom_point()+
+        geom_text(size = 2.5,hjust = 0.5,vjust = 1.2) +
+        facet_wrap(~league,ncol = 1,scales = "free_y")+
+        labs(title = "Average Goals per Game",subtitle = "Including Penalties")+
+        theme_minimal()+
+        theme(axis.title.x = element_blank(),
+              axis.ticks.x = element_blank(),
+              axis.title.y = element_blank(),
+              axis.text.y =  element_blank(),
+              panel.grid = element_blank(),
+              panel.spacing.y = unit(1, "lines"),
+              strip.text.x = element_text(hjust = 0),
+              plot.title = element_text(face="bold"),
+              plot.background = element_blank())+
+        scale_y_continuous(limit = c(2,3.5))
+        
+```
+
+Remarkably there are less shots, but goals per game average has increased or remained similar in most cases. There's only the strange case of Bundesliga, where it peaked in 2013-2014 and then in the following years "went back" to the mean. There could be an interesting development in an general improvement of the quality of shots taken, which could be analyzed more in deep later.
+
+Finally we can take a similar analysis to the conversion rates:
+
+```{r echo=FALSE, fig.align='center',fig.height=6,fig.width=8}
+ggplot(data=general_summ,aes(y = goalavg,x = season,group = league, label = round(goalavg*100,2)))+
+    geom_line()+
+        geom_point()+
+        geom_text(size = 2.5,hjust = 0.5,vjust = 1.2) +
+        facet_wrap(~league,ncol = 1,scales = "free_y")+
+        labs(title = "Conversion Rate",subtitle = "Including Penalties")+
+        theme_minimal()+
+        theme(axis.title.x = element_blank(),
+              axis.ticks.x = element_blank(),
+              axis.title.y = element_blank(),
+              axis.text.y =  element_blank(),
+              panel.grid = element_blank(),
+              panel.spacing.y = unit(1, "lines"),
+              strip.text.x = element_text(hjust = 0),
+              plot.title = element_text(face="bold"),
+              plot.background = element_blank())+
+        scale_y_continuous(limit = c(0.08,0.12))
+
+```
+Unsurprisingly, considering with the two previous plots, conversion rates have been increasing in all the leagues in the past 8 years.
 
 &nbsp;
 
+Now we will focus on the variables of interest for the model:
 
-
++ Shot location
++ Assist indicator
++ Game situation
++ Body part
++ Big chance indicator
 
 
 
